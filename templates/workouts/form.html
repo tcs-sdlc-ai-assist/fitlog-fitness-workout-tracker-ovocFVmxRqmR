@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}{% if editing %}Edit Workout{% else %}Log Workout{% endif %}{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">{% if editing %}Edit Workout{% else %}Log Workout{% endif %}</h1>
+            <p class="mt-1 text-sm text-gray-500">{% if editing %}Update your workout details below.{% else %}Record your workout session below.{% endif %}</p>
+        </div>
+        <a href="/workouts/" class="text-sm text-primary-600 hover:text-primary-800 font-medium flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back to Workouts
+        </a>
+    </div>
+</div>
+
+{% if templates_available is defined and templates_available and not editing %}
+<div class="bg-white border border-gray-200 rounded-lg p-4 mb-6 shadow-sm">
+    <h3 class="text-sm font-semibold text-gray-700 mb-2">Load from Template</h3>
+    <div class="flex items-center gap-3">
+        <select id="load-template-select" class="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+            <option value="">Select a template...</option>
+            {% for template in templates_available %}
+            <option value="{{ template.id }}">{{ template.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="button" id="load-template-btn" class="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors duration-150">
+            Load
+        </button>
+    </div>
+</div>
+{% endif %}
+
+<form id="workout-form" method="POST" action="{% if editing %}/workouts/{{ workout.id }}/edit{% else %}/workouts/new{% endif %}" class="space-y-6 pb-24 md:pb-6">
+    <!-- Workout Details -->
+    <div class="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 shadow-sm">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Workout Details</h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Date -->
+            <div>
+                <label for="workout-date" class="block text-sm font-medium text-gray-700 mb-1">Date <span class="text-red-500">*</span></label>
+                <input type="date" id="workout-date" name="date"
+                       value="{% if editing and workout %}{{ workout.date }}{% elif prefill_date %}{{ prefill_date }}{% else %}{{ today }}{% endif %}"
+                       class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                       required>
+            </div>
+
+            <!-- Duration -->
+            <div>
+                <label for="workout-duration" class="block text-sm font-medium text-gray-700 mb-1">Duration (minutes)</label>
+                <input type="number" id="workout-duration" name="duration_minutes"
+                       value="{% if editing and workout and workout.duration_minutes %}{{ workout.duration_minutes }}{% endif %}"
+                       min="1" step="1" placeholder="e.g. 60"
+                       class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+            </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="mt-4">
+            <label for="workout-notes" class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+            <textarea id="workout-notes" name="notes" rows="3" placeholder="How did the workout feel? Any observations..."
+                      class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-y">{% if editing and workout and workout.notes %}{{ workout.notes }}{% endif %}</textarea>
+        </div>
+    </div>
+
+    <!-- Exercise Options Data (hidden, used by JS) -->
+    <div id="exercise-options-data" class="hidden">
+        {% if exercises %}
+        {% for exercise in exercises %}
+        <option value="{{ exercise.id }}">{{ exercise.name }} ({{ exercise.muscle_group }})</option>
+        {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Exercises Section -->
+    <div class="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-gray-800">Exercises</h2>
+            <button type="button" id="add-exercise-btn"
+                    class="inline-flex items-center gap-1 px-3 py-1.5 bg-primary-50 text-primary-700 text-sm font-medium rounded-md hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors duration-150">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Add Exercise
+            </button>
+        </div>
+
+        <div id="exercises-container">
+            {% if editing and workout_exercises %}
+            {% for we in workout_exercises %}
+            <div data-exercise-index="{{ loop.index0 }}" class="bg-white border border-gray-200 rounded-lg p-4 mb-4 shadow-sm">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="text-sm font-semibold text-gray-700">Exercise #{{ loop.index }}</h4>
+                    <button type="button" data-action="remove-exercise" class="text-red-500 hover:text-red-700 text-sm font-medium focus:outline-none" aria-label="Remove exercise">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                </div>
+                <div class="mb-3">
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Exercise</label>
+                    <select name="exercises[{{ loop.index0 }}][exercise_id]" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                        <option value="">Select an exercise</option>
+                        {% for exercise in exercises %}
+                        <option value="{{ exercise.id }}" {% if exercise.id == we.exercise_id %}selected{% endif %}>{{ exercise.name }} ({{ exercise.muscle_group }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="sets-container" data-sets-for="{{ loop.index0 }}">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-medium text-gray-600">Sets</span>
+                        <div class="grid grid-cols-3 gap-2 text-xs text-gray-500 text-center" style="width: 280px;">
+                            <span>Weight</span>
+                            <span>Reps</span>
+                            <span></span>
+                        </div>
+                    </div>
+                    {% if we.sets %}
+                    {% for s in we.sets %}
+                    <div data-set-index="{{ loop.index0 }}" class="flex items-center gap-2 mb-2">
+                        <span class="text-xs text-gray-500 w-6 text-center flex-shrink-0">{{ loop.index }}</span>
+                        <div class="grid grid-cols-3 gap-2" style="width: 280px;">
+                            <input type="number" name="exercises[{{ loop.parent.loop.index0 }}][sets][{{ loop.index0 }}][weight]" value="{{ s.weight }}" placeholder="lbs" min="0" step="0.5" class="border border-gray-300 rounded-md px-2 py-1.5 text-sm text-center focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                            <input type="number" name="exercises[{{ loop.parent.loop.index0 }}][sets][{{ loop.index0 }}][reps]" value="{{ s.reps }}" placeholder="reps" min="1" step="1" class="border border-gray-300 rounded-md px-2 py-1.5 text-sm text-center focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                            <button type="button" data-action="remove-set" class="text-red-400 hover:text-red-600 focus:outline-none flex items-center justify-center" aria-label="Remove set">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+                <button type="button" data-action="add-set" class="mt-2 text-sm text-primary-600 hover:text-primary-800 font-medium focus:outline-none">
+                    + Add Set
+                </button>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+
+        {% if not editing or not workout_exercises %}
+        <!-- JS will add the first exercise block automatically -->
+        {% endif %}
+    </div>
+
+    <!-- Save as Template -->
+    {% if not editing %}
+    <div class="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 shadow-sm">
+        <div class="flex items-center gap-3">
+            <input type="checkbox" id="save-as-template-checkbox" name="save_as_template" value="true"
+                   class="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+            <label for="save-as-template-checkbox" class="text-sm font-medium text-gray-700">Save this workout as a template</label>
+        </div>
+        <div id="template-name-group" class="mt-3 hidden">
+            <label for="template-name-input" class="block text-sm font-medium text-gray-700 mb-1">Template Name</label>
+            <input type="text" id="template-name-input" name="template_name" placeholder="e.g. Push Day, Leg Day..."
+                   maxlength="200"
+                   class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Desktop Save Button -->
+    <div class="hidden md:flex justify-end gap-3">
+        <a href="/workouts/" class="px-6 py-2.5 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors duration-150">
+            Cancel
+        </a>
+        <button type="submit"
+                class="px-6 py-2.5 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors duration-150 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            {% if editing %}Update Workout{% else %}Save Workout{% endif %}
+        </button>
+    </div>
+</form>
+
+<!-- Sticky Bottom Bar (Mobile) -->
+<div id="sticky-bottom-bar" class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-4 z-40 transition-transform duration-300 translate-y-0">
+    <div class="flex gap-3 max-w-7xl mx-auto">
+        <a href="/workouts/" class="flex-1 px-4 py-3 border border-gray-300 text-gray-700 text-sm font-medium rounded-md text-center hover:bg-gray-50 transition-colors duration-150">
+            Cancel
+        </a>
+        <button type="submit" form="workout-form"
+                class="flex-1 px-4 py-3 bg-primary-600 text-white text-sm font-medium rounded-md text-center hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors duration-150 flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            {% if editing %}Update{% else %}Save{% endif %}
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/app.js"></script>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}{% if template %}Edit Template{% else %}New Template{% endif %}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-6">
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-2">
+            <a href="/templates/" class="hover:text-primary-600 transition-colors duration-150">Templates</a>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+            <span class="text-gray-700">{% if template %}Edit Template{% else %}New Template{% endif %}</span>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900">{% if template %}Edit Template{% else %}Create New Template{% endif %}</h1>
+        <p class="mt-1 text-sm text-gray-500">{% if template %}Update your workout template details and exercises.{% else %}Build a reusable workout template with your preferred exercises.{% endif %}</p>
+    </div>
+
+    <!-- Template Form -->
+    <form id="template-form" method="POST" action="{% if template %}/templates/{{ template.id }}/edit{% else %}/templates/new{% endif %}" class="space-y-6">
+
+        <!-- Template Name -->
+        <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+            <label for="template-name" class="block text-sm font-semibold text-gray-700 mb-1">Template Name <span class="text-red-500">*</span></label>
+            <input type="text" id="template-name" name="name" value="{% if template %}{{ template.name }}{% endif %}"
+                   placeholder="e.g., Push Day, Upper Body, Full Body A"
+                   maxlength="200" required
+                   class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-150">
+            <p class="mt-1 text-xs text-gray-400">Give your template a descriptive name so you can find it easily.</p>
+        </div>
+
+        <!-- Exercise Options Data (hidden, used by JS) -->
+        <div id="exercise-options-data" class="hidden">
+            {% if exercises %}
+                {% for exercise in exercises %}
+                <option value="{{ exercise.id }}">{{ exercise.name }} ({{ exercise.muscle_group }})</option>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <!-- Exercises Section -->
+        <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-sm font-semibold text-gray-700">Exercises <span class="text-red-500">*</span></h2>
+                    <p class="text-xs text-gray-400 mt-0.5">Add exercises in the order you want to perform them. Drag to reorder.</p>
+                </div>
+            </div>
+
+            <div id="template-exercises-container">
+                {% if template and template.exercises %}
+                    {% for tmpl_exercise in template.exercises %}
+                    <div data-template-exercise-index="{{ loop.index0 }}" class="flex items-center gap-3 bg-white border border-gray-200 rounded-lg p-3 mb-2 shadow-sm" draggable="true">
+                        <div class="cursor-grab text-gray-400 flex-shrink-0" aria-label="Drag to reorder">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
+                        </div>
+                        <span class="text-sm text-gray-500 w-6 text-center flex-shrink-0">{{ loop.index }}</span>
+                        <select name="template_exercises[{{ loop.index0 }}][exercise_id]" class="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                            <option value="">Select an exercise</option>
+                            {% if exercises %}
+                                {% for exercise in exercises %}
+                                <option value="{{ exercise.id }}" {% if exercise.id == tmpl_exercise.exercise_id %}selected{% endif %}>{{ exercise.name }} ({{ exercise.muscle_group }})</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                        <input type="hidden" name="template_exercises[{{ loop.index0 }}][order_index]" value="{{ loop.index0 }}">
+                        <button type="button" data-action="remove-template-exercise" class="text-red-400 hover:text-red-600 focus:outline-none flex-shrink-0" aria-label="Remove exercise">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <button type="button" id="template-add-exercise-btn"
+                    class="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-dashed border-gray-300 rounded-lg text-sm font-medium text-gray-500 hover:border-primary-400 hover:text-primary-600 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                </svg>
+                Add Exercise
+            </button>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex flex-col sm:flex-row items-center gap-3 pt-2">
+            <button type="submit"
+                    class="w-full sm:w-auto px-6 py-2.5 bg-primary-600 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors duration-150">
+                {% if template %}
+                    <span class="flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Update Template
+                    </span>
+                {% else %}
+                    <span class="flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        Create Template
+                    </span>
+                {% endif %}
+            </button>
+            <a href="/templates/"
+               class="w-full sm:w-auto px-6 py-2.5 bg-white text-gray-700 text-sm font-semibold rounded-lg border border-gray-300 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition-colors duration-150 text-center">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/app.js"></script>
+{% endblock %}

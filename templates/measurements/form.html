@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}{% if editing %}Edit Measurement{% else %}Log Measurement{% endif %}{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto">
+    <!-- Page Header -->
+    <div class="mb-6">
+        <div class="flex items-center gap-3 mb-2">
+            <a href="/measurements/" class="text-gray-500 hover:text-gray-700 transition-colors duration-150">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-900">{% if editing %}Edit Measurement{% else %}Log Measurement{% endif %}</h1>
+        </div>
+        <p class="text-sm text-gray-500 ml-8">{% if editing %}Update your body measurement entry.{% else %}Record your body measurements for today.{% endif %}</p>
+    </div>
+
+    <!-- Measurement Form -->
+    <form id="measurement-form" method="POST" action="{% if editing %}/measurements/{{ measurement.id }}/edit{% else %}/measurements/new{% endif %}" class="space-y-6">
+
+        <!-- Date Field -->
+        <div>
+            <label for="measurement_date" class="block text-sm font-medium text-gray-700 mb-1">
+                Date <span class="text-red-500">*</span>
+            </label>
+            <input type="date"
+                   id="measurement_date"
+                   name="measurement_date"
+                   value="{% if editing and measurement %}{{ measurement.measurement_date }}{% elif prefill_date %}{{ prefill_date }}{% else %}{{ today }}{% endif %}"
+                   required
+                   class="w-full border border-gray-300 rounded-lg px-4 py-3 text-base focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-150">
+            <p class="mt-1 text-xs text-gray-500">Select the date for this measurement.</p>
+        </div>
+
+        <!-- Weight Field -->
+        <div>
+            <label for="weight" class="block text-sm font-medium text-gray-700 mb-1">
+                Weight (lbs)
+            </label>
+            <input type="number"
+                   id="weight"
+                   name="weight"
+                   value="{% if editing and measurement and measurement.weight is not none %}{{ measurement.weight }}{% endif %}"
+                   min="0.1"
+                   step="0.1"
+                   placeholder="e.g. 175.5"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-3 text-base focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-150">
+            <p class="mt-1 text-xs text-gray-500">Your current body weight.</p>
+        </div>
+
+        <!-- Body Fat Percentage -->
+        <div>
+            <label for="body_fat_percent" class="block text-sm font-medium text-gray-700 mb-1">
+                Body Fat %
+            </label>
+            <input type="number"
+                   id="body_fat_percent"
+                   name="body_fat_percent"
+                   value="{% if editing and measurement and measurement.body_fat_percent is not none %}{{ measurement.body_fat_percent }}{% endif %}"
+                   min="0.1"
+                   max="100"
+                   step="0.1"
+                   placeholder="e.g. 18.5"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-3 text-base focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-150">
+            <p class="mt-1 text-xs text-gray-500">Estimated body fat percentage (0–100).</p>
+        </div>
+
+        <!-- Body Measurements Section -->
+        <div class="border-t border-gray-200 pt-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Body Measurements</h2>
+            <p class="text-sm text-gray-500 mb-4">All measurements in inches. Fill in any that you've measured.</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Chest -->
+                <div>
+                    <label for="chest" class="block text-sm font-medium text-gray-700 mb-1">Chest</label>
+                    <input type="number"
+                           id="chest"
+                           name="chest"
+                           value="{% if editing and measurement and measurement.chest is not none %}{{ measurement.chest }}{% endif %}"
+                           min="0.1"
+                           step="0.1"
+                           placeholder="inches"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-3 text-base focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-150">
+                </div>
+
+                <!-- Waist -->
+                <div>
+                    <label for="waist" class="block text-sm font-medium text-gray-700 mb-1">Waist</label>
+                    <input type="number"
+                           id="waist"
+                           name="waist"
+                           value="{% if editing and measurement and measurement.waist is not none %}{{ measurement.waist }}{% endif %}"
+                           min="0.1"
+                           step="0.1"
+                           placeholder="inches"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-3 text-base focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-150">
+                </div>
+
+                <!-- Hips -->
+                <div>
+                    <label for="hips" class="block text-sm font-medium text-gray-700 mb-1">Hips</label>
+                    <input type="number"
+                           id="hips"
+                           name="hips"
+                           value="{% if editing and measurement and measurement.hips is not none %}{{ measurement.hips }}{% endif %}"
+                           min="0.1"
+                           step="0.1"
+                           placeholder="inches"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-3 text-base focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-150">
+                </div>
+
+                <!-- Arms -->
+                <div>
+                    <label for="arms" class="block text-sm font-medium text-gray-700 mb-1">Arms</label>
+                    <input type="number"
+                           id="arms"
+                           name="arms"
+                           value="{% if editing and measurement and measurement.arms is not none %}{{ measurement.arms }}{% endif %}"
+                           min="0.1"
+                           step="0.1"
+                           placeholder="inches"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-3 text-base focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-150">
+                </div>
+
+                <!-- Thighs -->
+                <div>
+                    <label for="thighs" class="block text-sm font-medium text-gray-700 mb-1">Thighs</label>
+                    <input type="number"
+                           id="thighs"
+                           name="thighs"
+                           value="{% if editing and measurement and measurement.thighs is not none %}{{ measurement.thighs }}{% endif %}"
+                           min="0.1"
+                           step="0.1"
+                           placeholder="inches"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-3 text-base focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-150">
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="border-t border-gray-200 pt-6 flex flex-col sm:flex-row gap-3">
+            <button type="submit"
+                    class="w-full sm:w-auto flex-1 bg-primary-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors duration-150 text-base">
+                {% if editing %}
+                <span class="flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Update Measurement
+                </span>
+                {% else %}
+                <span class="flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Save Measurement
+                </span>
+                {% endif %}
+            </button>
+            <a href="/measurements/"
+               class="w-full sm:w-auto text-center py-3 px-6 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition-colors duration-150 text-base">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/app.js"></script>
+{% endblock %}

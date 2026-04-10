@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block title %}Progress{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Progress Tracking</h1>
+            <p class="mt-1 text-sm text-gray-500">Monitor your personal records, streaks, and training distribution.</p>
+        </div>
+    </div>
+
+    <!-- Streak & Consistency Stats -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div class="flex items-center gap-3">
+                <div class="flex-shrink-0 w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Current Streak</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ streak_stats.current_streak | default(0) }}</p>
+                    <p class="text-xs text-gray-400">days</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div class="flex items-center gap-3">
+                <div class="flex-shrink-0 w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Longest Streak</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ streak_stats.longest_streak | default(0) }}</p>
+                    <p class="text-xs text-gray-400">days</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div class="flex items-center gap-3">
+                <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Workouts</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ streak_stats.total_workouts | default(0) }}</p>
+                    <p class="text-xs text-gray-400">all time</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div class="flex items-center gap-3">
+                <div class="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">This Month</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ streak_stats.workouts_this_month | default(0) }}</p>
+                    <p class="text-xs text-gray-400">workouts</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent PRs (Last 30 Days) -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="px-4 py-4 sm:px-6 border-b border-gray-200">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clip-rule="evenodd"/>
+                </svg>
+                <h2 class="text-lg font-semibold text-gray-900">Recent Personal Records</h2>
+                <span class="text-xs text-gray-400 ml-1">(Last 30 days)</span>
+            </div>
+        </div>
+        <div class="p-4 sm:p-6">
+            {% if recent_prs and recent_prs | length > 0 %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {% for pr in recent_prs %}
+                <div class="flex items-center gap-3 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-semibold text-gray-900 truncate">{{ pr.exercise_name | default('Unknown Exercise') }}</p>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium
+                                {% if pr.type == 'weight' %}bg-blue-100 text-blue-700
+                                {% elif pr.type == 'reps' %}bg-green-100 text-green-700
+                                {% elif pr.type == 'volume' %}bg-purple-100 text-purple-700
+                                {% else %}bg-gray-100 text-gray-700{% endif %}">
+                                {{ pr.type | capitalize }}
+                            </span>
+                            <span class="text-sm font-bold text-gray-800">
+                                {% if pr.type == 'weight' %}{{ pr.value }} lbs
+                                {% elif pr.type == 'reps' %}{{ pr.value | int }} reps
+                                {% elif pr.type == 'volume' %}{{ pr.value }} lbs
+                                {% else %}{{ pr.value }}{% endif %}
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-0.5">{{ pr.achieved_at }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <svg class="mx-auto h-10 w-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                </svg>
+                <p class="mt-2 text-sm text-gray-500">No personal records in the last 30 days.</p>
+                <p class="text-xs text-gray-400 mt-1">Keep pushing — your next PR is around the corner!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- All Personal Records Table -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="px-4 py-4 sm:px-6 border-b border-gray-200">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                </svg>
+                <h2 class="text-lg font-semibold text-gray-900">All Personal Records</h2>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            {% if personal_records and personal_records | length > 0 %}
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exercise</th>
+                        <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <span class="inline-flex items-center gap-1">
+                                <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                Best Weight
+                            </span>
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <span class="inline-flex items-center gap-1">
+                                <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                Best Reps
+                            </span>
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <span class="inline-flex items-center gap-1">
+                                <span class="w-2 h-2 bg-purple-500 rounded-full"></span>
+                                Best Volume
+                            </span>
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Date Achieved</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for record in personal_records %}
+                    <tr class="hover:bg-gray-50 transition-colors duration-100">
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ record.exercise_name | default('Unknown') }}</div>
+                            {% if record.muscle_group %}
+                            <div class="text-xs text-gray-400">{{ record.muscle_group }}</div>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-center">
+                            {% if record.best_weight is not none %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-sm font-semibold bg-blue-50 text-blue-700">
+                                {{ record.best_weight }} lbs
+                            </span>
+                            {% else %}
+                            <span class="text-xs text-gray-300">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-center">
+                            {% if record.best_reps is not none %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-sm font-semibold bg-green-50 text-green-700">
+                                {{ record.best_reps | int }} reps
+                            </span>
+                            {% else %}
+                            <span class="text-xs text-gray-300">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-center">
+                            {% if record.best_volume is not none %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-sm font-semibold bg-purple-50 text-purple-700">
+                                {{ record.best_volume }} lbs
+                            </span>
+                            {% else %}
+                            <span class="text-xs text-gray-300">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-center text-xs text-gray-500">
+                            {{ record.latest_date | default('—') }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                </svg>
+                <h3 class="mt-3 text-sm font-medium text-gray-900">No personal records yet</h3>
+                <p class="mt-1 text-sm text-gray-500">Start logging workouts to track your personal bests.</p>
+                <div class="mt-4">
+                    <a href="/workouts/new" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-150">
+                        <svg class="w-4 h-4 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Log a Workout
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Muscle Group Distribution -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="px-4 py-4 sm:px-6 border-b border-gray-200">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+                </svg>
+                <h2 class="text-lg font-semibold text-gray-900">Muscle Group Distribution</h2>
+            </div>
+            <p class="mt-1 text-xs text-gray-400">Based on all logged workouts</p>
+        </div>
+        <div class="p-4 sm:p-6">
+            {% if muscle_group_distribution and muscle_group_distribution | length > 0 %}
+            {% set color_classes = [
+                {'bg': 'bg-blue-500', 'bg_light': 'bg-blue-100', 'text': 'text-blue-700'},
+                {'bg': 'bg-green-500', 'bg_light': 'bg-green-100', 'text': 'text-green-700'},
+                {'bg': 'bg-purple-500', 'bg_light': 'bg-purple-100', 'text': 'text-purple-700'},
+                {'bg': 'bg-orange-500', 'bg_light': 'bg-orange-100', 'text': 'text-orange-700'},
+                {'bg': 'bg-red-500', 'bg_light': 'bg-red-100', 'text': 'text-red-700'},
+                {'bg': 'bg-teal-500', 'bg_light': 'bg-teal-100', 'text': 'text-teal-700'},
+                {'bg': 'bg-yellow-500', 'bg_light': 'bg-yellow-100', 'text': 'text-yellow-700'},
+                {'bg': 'bg-indigo-500', 'bg_light': 'bg-indigo-100', 'text': 'text-indigo-700'},
+                {'bg': 'bg-pink-500', 'bg_light': 'bg-pink-100', 'text': 'text-pink-700'},
+                {'bg': 'bg-cyan-500', 'bg_light': 'bg-cyan-100', 'text': 'text-cyan-700'}
+            ] %}
+            {% set max_count = namespace(value=1) %}
+            {% for item in muscle_group_distribution %}
+                {% if item.count > max_count.value %}
+                    {% set max_count.value = item.count %}
+                {% endif %}
+            {% endfor %}
+            <div class="space-y-3">
+                {% for item in muscle_group_distribution %}
+                {% set color = color_classes[loop.index0 % color_classes | length] %}
+                {% set percentage = ((item.count / max_count.value) * 100) | round(0) | int if max_count.value > 0 else 0 %}
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full {{ color.bg }} flex-shrink-0"></span>
+                            <span class="text-sm font-medium text-gray-700">{{ item.muscle_group | capitalize }}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-semibold text-gray-900">{{ item.count }}</span>
+                            <span class="text-xs text-gray-400">sets</span>
+                            {% if item.percentage is defined %}
+                            <span class="text-xs font-medium {{ color.text }}">{{ item.percentage | round(0) | int }}%</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="w-full {{ color.bg_light }} rounded-full h-2.5 overflow-hidden">
+                        <div class="{{ color.bg }} h-2.5 rounded-full transition-all duration-500 ease-out" style="width: {{ percentage }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Summary -->
+            <div class="mt-6 pt-4 border-t border-gray-100">
+                <div class="flex flex-wrap gap-3">
+                    {% for item in muscle_group_distribution %}
+                    {% set color = color_classes[loop.index0 % color_classes | length] %}
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium {{ color.bg_light }} {{ color.text }}">
+                        <span class="w-1.5 h-1.5 rounded-full {{ color.bg }}"></span>
+                        {{ item.muscle_group | capitalize }}
+                        {% if item.percentage is defined %}({{ item.percentage | round(0) | int }}%){% endif %}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <svg class="mx-auto h-10 w-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+                </svg>
+                <p class="mt-2 text-sm text-gray-500">No workout data available yet.</p>
+                <p class="text-xs text-gray-400 mt-1">Log workouts to see your muscle group distribution.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/app.js"></script>
+{% endblock %}

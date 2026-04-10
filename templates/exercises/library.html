@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}Exercise Library{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Exercise Library</h1>
+            <p class="mt-1 text-sm text-gray-500">Browse and search exercises by muscle group and equipment.</p>
+        </div>
+        {% if user and user.role == 'admin' %}
+        <a href="/exercises/new"
+           class="inline-flex items-center justify-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors duration-150 shadow-sm">
+            <svg class="w-5 h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Add Exercise
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="bg-white border border-gray-200 rounded-lg shadow-sm p-4 mb-6">
+    <form method="GET" action="/exercises/" class="space-y-4">
+        <!-- Search Bar -->
+        <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
+            <input type="text"
+                   id="exercise-search-input"
+                   name="q"
+                   value="{{ search_query or '' }}"
+                   placeholder="Search exercises by name..."
+                   class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4">
+            <!-- Muscle Group Filter -->
+            <div class="flex-1">
+                <label for="muscle-group-filter" class="block text-xs font-medium text-gray-600 mb-1">Muscle Group</label>
+                <select id="muscle-group-filter"
+                        name="muscle_group"
+                        class="block w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    <option value="">All Muscle Groups</option>
+                    {% for mg in muscle_groups %}
+                    <option value="{{ mg }}" {% if selected_muscle_group == mg %}selected{% endif %}>{{ mg }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Equipment Filter -->
+            <div class="flex-1">
+                <label for="equipment-filter" class="block text-xs font-medium text-gray-600 mb-1">Equipment</label>
+                <select id="equipment-filter"
+                        name="equipment"
+                        class="block w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    <option value="">All Equipment</option>
+                    {% for eq in equipment_types %}
+                    <option value="{{ eq }}" {% if selected_equipment == eq %}selected{% endif %}>{{ eq }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex items-end">
+                <button type="submit"
+                        class="w-full sm:w-auto px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors duration-150">
+                    Filter
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Active Filter Chips -->
+    {% if search_query or selected_muscle_group or selected_equipment %}
+    <div class="mt-4 pt-3 border-t border-gray-100 flex flex-wrap items-center gap-2">
+        <span class="text-xs text-gray-500 font-medium">Active filters:</span>
+        {% if search_query %}
+        <a href="/exercises/?{% if selected_muscle_group %}muscle_group={{ selected_muscle_group }}&{% endif %}{% if selected_equipment %}equipment={{ selected_equipment }}{% endif %}"
+           class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-full hover:bg-primary-100 transition-colors duration-150">
+            Search: {{ search_query }}
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </a>
+        {% endif %}
+        {% if selected_muscle_group %}
+        <a href="/exercises/?{% if search_query %}q={{ search_query }}&{% endif %}{% if selected_equipment %}equipment={{ selected_equipment }}{% endif %}"
+           class="inline-flex items-center gap-1 px-2.5 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full hover:bg-green-100 transition-colors duration-150">
+            {{ selected_muscle_group }}
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </a>
+        {% endif %}
+        {% if selected_equipment %}
+        <a href="/exercises/?{% if search_query %}q={{ search_query }}&{% endif %}{% if selected_muscle_group %}muscle_group={{ selected_muscle_group }}{% endif %}"
+           class="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-50 text-purple-700 text-xs font-medium rounded-full hover:bg-purple-100 transition-colors duration-150">
+            {{ selected_equipment }}
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </a>
+        {% endif %}
+        <a href="/exercises/"
+           class="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full hover:bg-gray-200 transition-colors duration-150">
+            Clear all
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Results Count -->
+<div class="mb-4 flex items-center justify-between">
+    <p class="text-sm text-gray-500">
+        {% if total == 0 %}
+            No exercises found.
+        {% elif total == 1 %}
+            1 exercise found.
+        {% else %}
+            {{ total }} exercises found.
+        {% endif %}
+    </p>
+    {% if total_pages > 1 %}
+    <p class="text-sm text-gray-500">
+        Page {{ page }} of {{ total_pages }}
+    </p>
+    {% endif %}
+</div>
+
+<!-- Exercise Cards Grid -->
+{% if exercises and exercises|length > 0 %}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+    {% for exercise in exercises %}
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+        <a href="/exercises/{{ exercise.id }}" class="block p-4">
+            <div class="flex items-start justify-between mb-2">
+                <h3 class="text-base font-semibold text-gray-900 leading-tight">{{ exercise.name }}</h3>
+                {% if exercise.is_system %}
+                <span class="flex-shrink-0 ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-600" title="System exercise">
+                    <svg class="w-3 h-3 mr-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    System
+                </span>
+                {% endif %}
+            </div>
+
+            {% if exercise.instructions %}
+            <p class="text-sm text-gray-500 mb-3 line-clamp-2">{{ exercise.instructions }}</p>
+            {% endif %}
+
+            <div class="flex flex-wrap gap-2 mt-auto">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-100">
+                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                    </svg>
+                    {{ exercise.muscle_group }}
+                </span>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100">
+                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                    </svg>
+                    {{ exercise.equipment }}
+                </span>
+            </div>
+        </a>
+
+        {% if user and user.role == 'admin' %}
+        <div class="border-t border-gray-100 px-4 py-2 bg-gray-50 flex items-center justify-end gap-2">
+            <a href="/exercises/{{ exercise.id }}/edit"
+               class="text-xs font-medium text-primary-600 hover:text-primary-800 transition-colors duration-150">
+                Edit
+            </a>
+            <form method="POST" action="/exercises/{{ exercise.id }}/delete" class="inline">
+                <button type="submit"
+                        data-confirm-delete="Are you sure you want to delete '{{ exercise.name }}'? This action cannot be undone."
+                        class="text-xs font-medium text-red-500 hover:text-red-700 transition-colors duration-150">
+                    Delete
+                </button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<!-- Empty State -->
+<div class="bg-white border border-gray-200 rounded-lg shadow-sm p-8 text-center">
+    <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+    </svg>
+    <h3 class="mt-3 text-sm font-semibold text-gray-900">No exercises found</h3>
+    <p class="mt-1 text-sm text-gray-500">
+        {% if search_query or selected_muscle_group or selected_equipment %}
+            Try adjusting your search or filters.
+        {% else %}
+            Get started by adding your first exercise.
+        {% endif %}
+    </p>
+    {% if search_query or selected_muscle_group or selected_equipment %}
+    <div class="mt-4">
+        <a href="/exercises/"
+           class="inline-flex items-center px-4 py-2 text-sm font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors duration-150">
+            Clear all filters
+        </a>
+    </div>
+    {% elif user and user.role == 'admin' %}
+    <div class="mt-4">
+        <a href="/exercises/new"
+           class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors duration-150">
+            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Add Exercise
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<nav class="flex items-center justify-between border-t border-gray-200 bg-white rounded-lg shadow-sm px-4 py-3 sm:px-6" aria-label="Pagination">
+    <div class="hidden sm:block">
+        <p class="text-sm text-gray-700">
+            Showing
+            <span class="font-medium">{{ ((page - 1) * page_size) + 1 }}</span>
+            to
+            <span class="font-medium">{{ [page * page_size, total] | min }}</span>
+            of
+            <span class="font-medium">{{ total }}</span>
+            results
+        </p>
+    </div>
+    <div class="flex flex-1 justify-between sm:justify-end gap-2">
+        {% if page > 1 %}
+        <a href="/exercises/?page={{ page - 1 }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_muscle_group %}&muscle_group={{ selected_muscle_group }}{% endif %}{% if selected_equipment %}&equipment={{ selected_equipment }}{% endif %}"
+           class="relative inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-medium text-gray-700 border border-gray-300 hover:bg-gray-50 transition-colors duration-150">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Previous
+        </a>
+        {% else %}
+        <span class="relative inline-flex items-center rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-400 border border-gray-200 cursor-not-allowed">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Previous
+        </span>
+        {% endif %}
+
+        <!-- Page Numbers (visible on sm+) -->
+        <div class="hidden sm:flex items-center gap-1">
+            {% set start_page = [1, page - 2] | max %}
+            {% set end_page = [total_pages, page + 2] | min %}
+
+            {% if start_page > 1 %}
+            <a href="/exercises/?page=1{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_muscle_group %}&muscle_group={{ selected_muscle_group }}{% endif %}{% if selected_equipment %}&equipment={{ selected_equipment }}{% endif %}"
+               class="relative inline-flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 border border-gray-300 bg-white hover:bg-gray-50 transition-colors duration-150">
+                1
+            </a>
+            {% if start_page > 2 %}
+            <span class="px-2 text-gray-400 text-sm">…</span>
+            {% endif %}
+            {% endif %}
+
+            {% for p in range(start_page, end_page + 1) %}
+            {% if p == page %}
+            <span class="relative inline-flex items-center rounded-md px-3 py-2 text-sm font-semibold text-white bg-primary-600 border border-primary-600">
+                {{ p }}
+            </span>
+            {% else %}
+            <a href="/exercises/?page={{ p }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_muscle_group %}&muscle_group={{ selected_muscle_group }}{% endif %}{% if selected_equipment %}&equipment={{ selected_equipment }}{% endif %}"
+               class="relative inline-flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 border border-gray-300 bg-white hover:bg-gray-50 transition-colors duration-150">
+                {{ p }}
+            </a>
+            {% endif %}
+            {% endfor %}
+
+            {% if end_page < total_pages %}
+            {% if end_page < total_pages - 1 %}
+            <span class="px-2 text-gray-400 text-sm">…</span>
+            {% endif %}
+            <a href="/exercises/?page={{ total_pages }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_muscle_group %}&muscle_group={{ selected_muscle_group }}{% endif %}{% if selected_equipment %}&equipment={{ selected_equipment }}{% endif %}"
+               class="relative inline-flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 border border-gray-300 bg-white hover:bg-gray-50 transition-colors duration-150">
+                {{ total_pages }}
+            </a>
+            {% endif %}
+        </div>
+
+        {% if page < total_pages %}
+        <a href="/exercises/?page={{ page + 1 }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_muscle_group %}&muscle_group={{ selected_muscle_group }}{% endif %}{% if selected_equipment %}&equipment={{ selected_equipment }}{% endif %}"
+           class="relative inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-medium text-gray-700 border border-gray-300 hover:bg-gray-50 transition-colors duration-150">
+            Next
+            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+        </a>
+        {% else %}
+        <span class="relative inline-flex items-center rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-400 border border-gray-200 cursor-not-allowed">
+            Next
+            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+        </span>
+        {% endif %}
+    </div>
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/app.js"></script>
+<style>
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}

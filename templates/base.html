@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FitLog{% endblock %} | FitLog Workout Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body class="h-full bg-gray-50 text-gray-900 flex flex-col min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-primary-700 shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex-shrink-0">
+                    <a href="/dashboard/" class="text-white font-bold text-xl tracking-tight flex items-center gap-2">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        FitLog
+                    </a>
+                </div>
+
+                {% if user %}
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex md:items-center md:space-x-1">
+                    {% if user.role == 'admin' %}
+                    <a href="/admin/dashboard/"
+                       class="px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 {% if '/admin/dashboard' in request.url.path %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %}">
+                        Admin Dashboard
+                    </a>
+                    <a href="/exercises/"
+                       class="px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 {% if '/exercises' in request.url.path and '/admin' not in request.url.path %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %}">
+                        Exercises
+                    </a>
+                    <a href="/templates/"
+                       class="px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 {% if '/templates' in request.url.path %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %}">
+                        Templates
+                    </a>
+                    <a href="/admin/users/"
+                       class="px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 {% if '/admin/users' in request.url.path %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %}">
+                        Users
+                    </a>
+                    {% else %}
+                    <a href="/dashboard/"
+                       class="px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 {% if request.url.path == '/dashboard/' or request.url.path == '/dashboard' %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %}">
+                        Dashboard
+                    </a>
+                    <a href="/exercises/"
+                       class="px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 {% if '/exercises' in request.url.path %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %}">
+                        Exercises
+                    </a>
+                    <a href="/workouts/"
+                       class="px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 {% if '/workouts' in request.url.path %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %}">
+                        Workouts
+                    </a>
+                    <a href="/templates/"
+                       class="px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 {% if '/templates' in request.url.path %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %}">
+                        Templates
+                    </a>
+                    <a href="/measurements/"
+                       class="px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 {% if '/measurements' in request.url.path %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %}">
+                        Measurements
+                    </a>
+                    <a href="/progress/"
+                       class="px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 {% if '/progress' in request.url.path %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %}">
+                        Progress
+                    </a>
+                    {% endif %}
+                </div>
+
+                <!-- Desktop User Menu -->
+                <div class="hidden md:flex md:items-center md:space-x-3">
+                    <span class="text-primary-200 text-sm">{{ user.display_name }}</span>
+                    <form method="POST" action="/auth/logout" class="inline">
+                        <button type="submit"
+                                class="px-3 py-2 rounded-md text-sm font-medium text-primary-100 hover:bg-primary-600 hover:text-white transition-colors duration-150">
+                            Logout
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Mobile Hamburger Button -->
+                <div class="md:hidden">
+                    <button type="button" id="mobile-menu-button"
+                            class="inline-flex items-center justify-center p-2 rounded-md text-primary-200 hover:text-white hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white transition-colors duration-150"
+                            aria-controls="mobile-menu" aria-expanded="false">
+                        <span class="sr-only">Open main menu</span>
+                        <!-- Hamburger icon -->
+                        <svg id="menu-icon-open" class="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                        <!-- Close icon -->
+                        <svg id="menu-icon-close" class="hidden h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                {% else %}
+                <!-- Not logged in -->
+                <div class="flex items-center space-x-2">
+                    <a href="/auth/login"
+                       class="px-3 py-2 rounded-md text-sm font-medium text-primary-100 hover:bg-primary-600 hover:text-white transition-colors duration-150">
+                        Login
+                    </a>
+                    <a href="/auth/register"
+                       class="px-4 py-2 rounded-md text-sm font-medium bg-white text-primary-700 hover:bg-primary-50 transition-colors duration-150">
+                        Register
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if user %}
+        <!-- Mobile Menu -->
+        <div class="md:hidden hidden" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 border-t border-primary-600">
+                {% if user.role == 'admin' %}
+                <a href="/admin/dashboard/"
+                   class="block px-3 py-2 rounded-md text-base font-medium transition-colors duration-150 {% if '/admin/dashboard' in request.url.path %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %}">
+                    Admin Dashboard
+                </a>
+                <a href="/exercises/"
+                   class="block px-3 py-2 rounded-md text-base font-medium transition-colors duration-150 {% if '/exercises' in request.url.path and '/admin' not in request.url.path %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %}">
+                    Exercises
+                </a>
+                <a href="/templates/"
+                   class="block px-3 py-2 rounded-md text-base font-medium transition-colors duration-150 {% if '/templates' in request.url.path %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %}">
+                    Templates
+                </a>
+                <a href="/admin/users/"
+                   class="block px-3 py-2 rounded-md text-base font-medium transition-colors duration-150 {% if '/admin/users' in request.url.path %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %}">
+                    Users
+                </a>
+                {% else %}
+                <a href="/dashboard/"
+                   class="block px-3 py-2 rounded-md text-base font-medium transition-colors duration-150 {% if request.url.path == '/dashboard/' or request.url.path == '/dashboard' %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %}">
+                    Dashboard
+                </a>
+                <a href="/exercises/"
+                   class="block px-3 py-2 rounded-md text-base font-medium transition-colors duration-150 {% if '/exercises' in request.url.path %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %}">
+                    Exercises
+                </a>
+                <a href="/workouts/"
+                   class="block px-3 py-2 rounded-md text-base font-medium transition-colors duration-150 {% if '/workouts' in request.url.path %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %}">
+                    Workouts
+                </a>
+                <a href="/templates/"
+                   class="block px-3 py-2 rounded-md text-base font-medium transition-colors duration-150 {% if '/templates' in request.url.path %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %}">
+                    Templates
+                </a>
+                <a href="/measurements/"
+                   class="block px-3 py-2 rounded-md text-base font-medium transition-colors duration-150 {% if '/measurements' in request.url.path %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %}">
+                    Measurements
+                </a>
+                <a href="/progress/"
+                   class="block px-3 py-2 rounded-md text-base font-medium transition-colors duration-150 {% if '/progress' in request.url.path %}bg-primary-800 text-white{% else %}text-primary-100 hover:bg-primary-600 hover:text-white{% endif %}">
+                    Progress
+                </a>
+                {% endif %}
+
+                <!-- Mobile User Info & Logout -->
+                <div class="border-t border-primary-600 pt-3 mt-3">
+                    <div class="px-3 py-1 text-primary-200 text-sm">
+                        Signed in as <span class="font-semibold text-white">{{ user.display_name }}</span>
+                    </div>
+                    <form method="POST" action="/auth/logout">
+                        <button type="submit"
+                                class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-primary-100 hover:bg-primary-600 hover:text-white transition-colors duration-150">
+                            Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </nav>
+
+    <!-- Flash Messages -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        {% if flash_messages %}
+        <div class="mt-4 space-y-2">
+            {% for message in flash_messages %}
+            <div class="flash-message rounded-md p-4 {% if message.type == 'success' %}bg-green-50 border border-green-200{% elif message.type == 'error' %}bg-red-50 border border-red-200{% elif message.type == 'warning' %}bg-yellow-50 border border-yellow-200{% else %}bg-blue-50 border border-blue-200{% endif %}"
+                 role="alert">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        {% if message.type == 'success' %}
+                        <svg class="h-5 w-5 text-green-400 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        {% elif message.type == 'error' %}
+                        <svg class="h-5 w-5 text-red-400 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                        {% elif message.type == 'warning' %}
+                        <svg class="h-5 w-5 text-yellow-400 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        {% else %}
+                        <svg class="h-5 w-5 text-blue-400 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                        {% endif %}
+                        <p class="text-sm {% if message.type == 'success' %}text-green-700{% elif message.type == 'error' %}text-red-700{% elif message.type == 'warning' %}text-yellow-700{% else %}text-blue-700{% endif %}">
+                            {{ message.text }}
+                        </p>
+                    </div>
+                    <button type="button" onclick="this.closest('.flash-message').remove()"
+                            class="ml-3 flex-shrink-0 {% if message.type == 'success' %}text-green-400 hover:text-green-600{% elif message.type == 'error' %}text-red-400 hover:text-red-600{% elif message.type == 'warning' %}text-yellow-400 hover:text-yellow-600{% else %}text-blue-400 hover:text-blue-600{% endif %} transition-colors duration-150">
+                        <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <div class="mt-4">
+            <div class="flash-message rounded-md p-4 bg-red-50 border border-red-200" role="alert">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <svg class="h-5 w-5 text-red-400 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                        <p class="text-sm text-red-700">{{ error }}</p>
+                    </div>
+                    <button type="button" onclick="this.closest('.flash-message').remove()"
+                            class="ml-3 flex-shrink-0 text-red-400 hover:text-red-600 transition-colors duration-150">
+                        <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if success %}
+        <div class="mt-4">
+            <div class="flash-message rounded-md p-4 bg-green-50 border border-green-200" role="alert">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <svg class="h-5 w-5 text-green-400 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <p class="text-sm text-green-700">{{ success }}</p>
+                    </div>
+                    <button type="button" onclick="this.closest('.flash-message').remove()"
+                            class="ml-3 flex-shrink-0 text-green-400 hover:text-green-600 transition-colors duration-150">
+                        <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-400 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    <span class="text-sm font-semibold text-gray-300">FitLog</span>
+                </div>
+                <p class="text-sm text-center">&copy; {{ now().year if now is defined else "2024" }} FitLog Workout Tracker. All rights reserved.</p>
+                <div class="flex items-center space-x-4 text-sm">
+                    <a href="/exercises/" class="hover:text-gray-200 transition-colors duration-150">Exercises</a>
+                    {% if user %}
+                    <a href="/dashboard/" class="hover:text-gray-200 transition-colors duration-150">Dashboard</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Menu Toggle Script -->
+    <script>
+        (function() {
+            var menuButton = document.getElementById('mobile-menu-button');
+            var mobileMenu = document.getElementById('mobile-menu');
+            var iconOpen = document.getElementById('menu-icon-open');
+            var iconClose = document.getElementById('menu-icon-close');
+
+            if (menuButton && mobileMenu) {
+                menuButton.addEventListener('click', function() {
+                    var isExpanded = menuButton.getAttribute('aria-expanded') === 'true';
+                    menuButton.setAttribute('aria-expanded', !isExpanded);
+                    mobileMenu.classList.toggle('hidden');
+                    if (iconOpen && iconClose) {
+                        iconOpen.classList.toggle('hidden');
+                        iconOpen.classList.toggle('block');
+                        iconClose.classList.toggle('hidden');
+                        iconClose.classList.toggle('block');
+                    }
+                });
+            }
+
+            // Auto-dismiss flash messages after 5 seconds
+            var flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(function(msg) {
+                setTimeout(function() {
+                    if (msg && msg.parentNode) {
+                        msg.style.transition = 'opacity 0.3s ease-out';
+                        msg.style.opacity = '0';
+                        setTimeout(function() {
+                            if (msg.parentNode) {
+                                msg.remove();
+                            }
+                        }, 300);
+                    }
+                }, 5000);
+            });
+        })();
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

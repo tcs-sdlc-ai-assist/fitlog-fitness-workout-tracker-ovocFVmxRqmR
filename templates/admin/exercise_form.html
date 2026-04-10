@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}{% if exercise %}Edit Exercise{% else %}Add Exercise{% endif %}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-6">
+        <nav class="flex items-center text-sm text-gray-500 mb-4">
+            <a href="/admin/dashboard/" class="hover:text-primary-600 transition-colors duration-150">Admin</a>
+            <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+            <a href="/exercises/" class="hover:text-primary-600 transition-colors duration-150">Exercises</a>
+            <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+            <span class="text-gray-700 font-medium">{% if exercise %}Edit{% else %}Add{% endif %}</span>
+        </nav>
+        <h1 class="text-2xl font-bold text-gray-900">{% if exercise %}Edit Exercise{% else %}Add New Exercise{% endif %}</h1>
+        <p class="mt-1 text-sm text-gray-500">{% if exercise %}Update the exercise details below.{% else %}Fill in the details to add a new exercise to the library.{% endif %}</p>
+    </div>
+
+    <!-- Exercise Form -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+        <form method="POST"
+              action="{% if exercise %}/admin/exercises/{{ exercise.id }}/edit{% else %}/admin/exercises/create{% endif %}"
+              class="p-6 space-y-6"
+              id="exercise-form">
+
+            <!-- Name -->
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+                    Exercise Name <span class="text-red-500">*</span>
+                </label>
+                <input type="text"
+                       id="name"
+                       name="name"
+                       value="{{ exercise.name if exercise else '' }}"
+                       required
+                       minlength="1"
+                       maxlength="200"
+                       placeholder="e.g., Barbell Bench Press"
+                       class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-150">
+                <p class="mt-1 text-xs text-gray-400">Must be unique. Maximum 200 characters.</p>
+            </div>
+
+            <!-- Muscle Group -->
+            <div>
+                <label for="muscle_group" class="block text-sm font-medium text-gray-700 mb-1">
+                    Primary Muscle Group <span class="text-red-500">*</span>
+                </label>
+                <select id="muscle_group"
+                        name="muscle_group"
+                        required
+                        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-150">
+                    <option value="">Select a muscle group</option>
+                    {% set muscle_groups = ["Chest", "Back", "Shoulders", "Arms", "Legs", "Core", "Cardio", "Full Body", "Other"] %}
+                    {% for group in muscle_groups %}
+                    <option value="{{ group }}" {% if exercise and exercise.muscle_group == group %}selected{% endif %}>{{ group }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Secondary Muscle Group -->
+            <div>
+                <label for="secondary_muscle_group" class="block text-sm font-medium text-gray-700 mb-1">
+                    Secondary Muscle Group
+                </label>
+                <select id="secondary_muscle_group"
+                        name="secondary_muscle_group"
+                        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-150">
+                    <option value="">None</option>
+                    {% for group in muscle_groups %}
+                    <option value="{{ group }}" {% if exercise and exercise.secondary_muscle_group is defined and exercise.secondary_muscle_group == group %}selected{% endif %}>{{ group }}</option>
+                    {% endfor %}
+                </select>
+                <p class="mt-1 text-xs text-gray-400">Optional. Select if the exercise targets a secondary muscle group.</p>
+            </div>
+
+            <!-- Equipment -->
+            <div>
+                <label for="equipment" class="block text-sm font-medium text-gray-700 mb-1">
+                    Equipment <span class="text-red-500">*</span>
+                </label>
+                <select id="equipment"
+                        name="equipment"
+                        required
+                        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-150">
+                    <option value="">Select equipment</option>
+                    {% set equipment_types = ["Barbell", "Dumbbell", "Machine", "Bodyweight", "Cable", "Kettlebell", "Resistance Band", "EZ Bar", "Smith Machine", "Other", "None"] %}
+                    {% for equip in equipment_types %}
+                    <option value="{{ equip }}" {% if exercise and exercise.equipment == equip %}selected{% endif %}>{{ equip }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Category -->
+            <div>
+                <label for="category" class="block text-sm font-medium text-gray-700 mb-1">
+                    Category
+                </label>
+                <select id="category"
+                        name="category"
+                        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-150">
+                    <option value="">Select a category</option>
+                    {% set categories = ["Strength", "Hypertrophy", "Endurance", "Flexibility", "Cardio", "Plyometric", "Olympic", "Compound", "Isolation", "Other"] %}
+                    {% for cat in categories %}
+                    <option value="{{ cat }}" {% if exercise and exercise.category is defined and exercise.category == cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+                <p class="mt-1 text-xs text-gray-400">Optional. Helps users find exercises by training style.</p>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                </label>
+                <textarea id="description"
+                          name="description"
+                          rows="3"
+                          maxlength="1000"
+                          placeholder="Brief description of the exercise..."
+                          class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-150 resize-y">{{ exercise.description if exercise and exercise.description is defined and exercise.description else '' }}</textarea>
+                <p class="mt-1 text-xs text-gray-400">Optional. A short summary of the exercise.</p>
+            </div>
+
+            <!-- Instructions -->
+            <div>
+                <label for="instructions" class="block text-sm font-medium text-gray-700 mb-1">
+                    Instructions
+                </label>
+                <textarea id="instructions"
+                          name="instructions"
+                          rows="5"
+                          maxlength="2000"
+                          placeholder="Step-by-step instructions for performing the exercise..."
+                          class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-150 resize-y">{{ exercise.instructions if exercise and exercise.instructions else '' }}</textarea>
+                <p class="mt-1 text-xs text-gray-400">Optional. Detailed instructions for proper form and execution. Maximum 2000 characters.</p>
+            </div>
+
+            <!-- System Exercise Toggle -->
+            <div class="flex items-center gap-3 pt-2">
+                <input type="checkbox"
+                       id="is_system"
+                       name="is_system"
+                       value="true"
+                       {% if exercise and exercise.is_system %}checked{% elif not exercise %}checked{% endif %}
+                       class="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+                <label for="is_system" class="text-sm text-gray-700">
+                    System exercise <span class="text-gray-400">(visible to all users)</span>
+                </label>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                <a href="/exercises/"
+                   class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-150">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Cancel
+                </a>
+                <div class="flex items-center gap-3">
+                    {% if exercise %}
+                    <a href="/exercises/{{ exercise.id }}"
+                       class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-150">
+                        View Exercise
+                    </a>
+                    {% endif %}
+                    <button type="submit"
+                            class="inline-flex items-center px-6 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-150 shadow-sm">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {% if exercise %}
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            {% else %}
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            {% endif %}
+                        </svg>
+                        {% if exercise %}Save Changes{% else %}Add Exercise{% endif %}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {% if exercise %}
+    <!-- Danger Zone -->
+    <div class="mt-8 bg-white shadow-sm rounded-lg border border-red-200">
+        <div class="p-6">
+            <h3 class="text-lg font-semibold text-red-600 mb-2">Danger Zone</h3>
+            <p class="text-sm text-gray-500 mb-4">Deleting an exercise is permanent and cannot be undone. Any workouts referencing this exercise will be affected.</p>
+            <form method="POST" action="/admin/exercises/{{ exercise.id }}/delete">
+                <button type="submit"
+                        data-confirm-delete="Are you sure you want to delete '{{ exercise.name }}'? This action cannot be undone."
+                        class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-150">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Delete Exercise
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/app.js"></script>
+<script>
+    (function() {
+        var form = document.getElementById('exercise-form');
+        if (!form) return;
+
+        form.addEventListener('submit', function(e) {
+            var nameInput = form.querySelector('input[name="name"]');
+            var muscleGroupSelect = form.querySelector('select[name="muscle_group"]');
+            var equipmentSelect = form.querySelector('select[name="equipment"]');
+            var valid = true;
+
+            [nameInput, muscleGroupSelect, equipmentSelect].forEach(function(field) {
+                if (field) {
+                    field.classList.remove('border-red-500');
+                    field.classList.add('border-gray-300');
+                }
+            });
+
+            if (nameInput && !nameInput.value.trim()) {
+                nameInput.classList.remove('border-gray-300');
+                nameInput.classList.add('border-red-500');
+                valid = false;
+            }
+
+            if (muscleGroupSelect && !muscleGroupSelect.value) {
+                muscleGroupSelect.classList.remove('border-gray-300');
+                muscleGroupSelect.classList.add('border-red-500');
+                valid = false;
+            }
+
+            if (equipmentSelect && !equipmentSelect.value) {
+                equipmentSelect.classList.remove('border-gray-300');
+                equipmentSelect.classList.add('border-red-500');
+                valid = false;
+            }
+
+            if (!valid) {
+                e.preventDefault();
+                if (window.FitLog && window.FitLog.showToast) {
+                    window.FitLog.showToast('Please fill in all required fields.', 'error');
+                }
+            }
+        });
+    })();
+</script>
+{% endblock %}
